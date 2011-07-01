@@ -13,11 +13,27 @@ class MatrixImporter {
 	 * 				]
 	 * 				The matrix is always rectangular
 	 */
-	public def importFile( File file ) {
+	public def importFile( File file, Map hints = null ) {
+		// Always give a map to the readers
+		if( !hints )
+			hints = [:]
+		
+		// Loop through all registered readers, and parse the file using
+		// the first reader that is able to parse the file.
 		for( reader in readers ) {
-			if( r.canParse( file ) )
-				return r.parse( file );
+			if( reader.canParse( file ) ) {
+				def parsedFile = reader.parse( file, hints );
+				
+				// Only return the value if the file has been correctly parsed
+				// (i.e. the structure != null). Otherwise, we should try to parse
+				// the file using another reader (if applicable)
+				if( parsedFile != null )
+					return parsedFile
+			}
 		}
+			
+		// If parsing didn't work out, return null
+		return null
 	}
 	
 	/**
@@ -38,22 +54,22 @@ class MatrixImporter {
 	}
 	
 	// Singleton instance
-	private MatrixImporter _instance = null;
+	private static MatrixImporter _instance = null;
 	
 	// List of registered readers
 	private List readers = []
 	
 	// Private constructor in order to facilitate the singleton pattern
 	private MatrixImporter() {
-		registerReader(org.dbxp.matrixImporter.ExcelReader)
-		registerReader(org.dbxp.matrixImporter.CsvReader)
+		registerReader( new ExcelReader() )
+		registerReader( new CsvReader() )
 	} 
 	
 	/**
 	 * Returns the singleton instance of the MatrixImporter
 	 * @return
 	 */
-	public MatrixImporter getInstance() {
+	public static MatrixImporter getInstance() {
 		if( _instance == null )
 			_instance = new MatrixImporter();
 		

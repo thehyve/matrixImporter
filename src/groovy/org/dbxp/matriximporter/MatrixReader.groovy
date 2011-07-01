@@ -26,6 +26,9 @@ public interface MatrixReader {
 	/**
 	 * Parses the given file and returns the matrix in that file
 	 * @param file	File object to read
+	 * @param hints	Map with hints for the reader. Might include keys like 'startRow', 'endRow' and 'sheet'. 
+	 * 				Readers implementing this interface may or may not listen to the hints given. See the documentation
+	 * 				of different implementing classes.
 	 * @return		Two-dimensional data matrix of structure:
 	 * 				[ 
 	 * 					[ 1, 3, 5 ] // First line
@@ -34,5 +37,5 @@ public interface MatrixReader {
 	 * 				The matrix must be rectangular, so all lines should contain
 	 * 				the same number of values
 	 */
-	public def parse( File file );
+	public def parse( File file, Map hints );
 }

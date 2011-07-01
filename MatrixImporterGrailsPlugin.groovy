@@ -11,11 +11,11 @@ class MatrixImporterGrailsPlugin {
     ]
 
     // TODO Fill in these fields
-    def author = "Your name"
-    def authorEmail = ""
-    def title = "Plugin summary/headline"
+    def author = "Robert Horlings"
+    def authorEmail = "robert@isdat.nl"
+    def title = "MatrixImporter"
     def description = '''\\
-Brief description of the plugin.
+Plugin for reading files with matrix-like data structure (excel, csv etc.) into a two dimensional List
 '''
 
     // URL to the plugin's documentation

@@ -38,4 +38,10 @@ public interface MatrixReader {
 	 * 				the same number of values
 	 */
 	public def parse( File file, Map hints );
+	
+	/**
+	 * Returns a description for this reader
+	 * @return	Human readable description
+	 */
+	public String getDescription();
 }

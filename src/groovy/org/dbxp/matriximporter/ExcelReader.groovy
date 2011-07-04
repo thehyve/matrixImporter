@@ -122,4 +122,13 @@ public class ExcelReader implements MatrixReader {
 		dataMatrix
 
 	}
+	
+	/**
+	* Returns a description for this reader
+	* @return	Human readable description
+	*/
+   public String getDescription() {
+	   return "Matrix importer for reading XLS and XLSX files"
+   }
+
 }

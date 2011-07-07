@@ -37,6 +37,9 @@ class MatrixImporter {
 	 * Imports a file using an existing MatrixReader. If no reader is found that
 	 * is able to parse the file, null is returned.
 	 * @param file	File to read
+     * @param hints	Map with hints for the reader. Might include keys like 'startRow', 'endRow' and 'sheet'.
+     * 				Readers implementing this interface may or may not listen to the hints given. See the documentation
+     * 				of different implementing classes.
 	 * @return		Two-dimensional data matrix with the contents of the file. The matrix has the structure:
 	 * 				[ 
 	 * 					[ 1, 3, 5 ] // First line

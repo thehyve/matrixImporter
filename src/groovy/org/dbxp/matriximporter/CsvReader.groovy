@@ -1,9 +1,5 @@
 package org.dbxp.matriximporter;
 
-import java.io.File
-import java.util.ArrayList;
-import java.util.Map;
-
 /**
  * This class is capable of importing CSV files (with , (comma), ; (semicolon) and tab as separators)
  * 
@@ -118,21 +114,21 @@ public class CsvReader implements MatrixReader {
 			endRow = numLines - 1;
 		}
 		
-		// What treshold should be used when determining default delimiter
-		def treshold = hints.treshold
-		if( treshold == null )
-			treshold = 0;
+		// What threshold should be used when determining default delimiter
+		def threshold = hints.threshold
+		if( threshold == null )
+			threshold = 0;
 		
 		def delimiter = hints.delimiter
 		if( !delimiter ) {
-			delimiter = determineDelimiterFromInput( input, treshold );
+			delimiter = determineDelimiterFromInput( input, threshold );
 			
 			// If no delimiter could be determined, raise an error
 			if( !delimiter )
 				throw new Exception( "CSV delimiter could not be automatically determined for input." )
 		}
 	
-		// Now loop through all rows, retrieving data from the excel file
+		// Now loop through all rows, retrieving data from the file
 		ArrayList data = []
 		def numColumns = 0;
 		input.eachLine(0) { String line, int lineNumber ->
@@ -156,7 +152,7 @@ public class CsvReader implements MatrixReader {
 	 * @param input	File to parse
 	 * @return		Most probable delimiter. If none could be determined, null is given.
 	 */
-	protected String determineDelimiterFromInput( File input, int treshold = 5 ) {
+	protected String determineDelimiterFromInput( File input, int threshold = 5 ) {
 		def delimiterCounts = [ ",": 0, ";": 0, "\t": 0 ];
 		def possibleDelimiters = delimiterCounts.keySet().asList();
 
@@ -189,7 +185,7 @@ public class CsvReader implements MatrixReader {
 		def bestCount = 0;
 		
 		delimiterCounts.each { 
-			if( it.value > bestCount && it.value >= treshold ) {
+			if( it.value > bestCount && it.value >= threshold ) {
 				bestCount = it.value;
 				bestDelimiter = it.key
 			}
@@ -204,7 +200,7 @@ public class CsvReader implements MatrixReader {
 	* @param 	input	String to parse
 	* @return	Most probable delimiter. If none could be determined, null is given.
 	*/
-   protected String determineDelimiterFromInput( String input, int treshold = 5 ) {
+   protected String determineDelimiterFromInput( String input, int threshold = 5 ) {
 	   def delimiterCounts = [ ",": 0, ";": 0, "\t": 0 ];
 	   def possibleDelimiters = delimiterCounts.keySet().asList();
 
@@ -213,13 +209,13 @@ public class CsvReader implements MatrixReader {
 		   delimiterCounts[ delimiter ] = input.count( delimiter )
 	   }
 
-	   // Determine the best delimiter. It is only returned if more than <treshold> of those characters have been
+	   // Determine the best delimiter. It is only returned if more than <threshold> of those characters have been
 	   // found
 	   def bestDelimiter = null;
 	   def bestCount = 0;
 	   
 	   delimiterCounts.each {
-		   if( it.value > bestCount && it.value >= treshold ) {
+		   if( it.value > bestCount && it.value >= threshold ) {
 			   bestCount = it.value;
 			   bestDelimiter = it.key
 		   }

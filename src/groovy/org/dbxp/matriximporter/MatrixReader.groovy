@@ -1,7 +1,4 @@
-package org.dbxp.matriximporter;
-
-import java.io.File;
-import java.util.List;
+package org.dbxp.matriximporter
 
 /**
  * This interface describes the methods needed
@@ -13,35 +10,65 @@ import java.util.List;
  * @author robert
  *
  */
-public interface MatrixReader {
-	/** 
-	 * Returns true if this class is able to parse
-	 * the given file
-	 * @param file	File object to read
-	 * @return	True if this class can parse the given file, false otherwise
-	 */
-	public boolean canParse( File file );
-	
-	
+public abstract class MatrixReader {
+
 	/**
-	 * Parses the given file and returns the matrix in that file
+	 * Returns true if this class is able to parse an object with given filename supplied via 'hints'.
+     * Should also return true for empty input.
+     *
+	 * @param hints a map containing hints. Right now, only 'fileName' is used
+	 * @return	True if this class can parse the given object or empty input, false otherwise
+	 */
+	public abstract boolean canParse ( Map hints)
+
+    /**
+     *
+     * @param file
+     * @param hints
+     * @return
+     */
+	public parse( File file, Map hints = [:] ) {
+       parse(file.newInputStream(), hints)
+    }
+
+    /**
+     *
+     * @param string
+     * @param hints
+     * @return
+     */
+    public parse( String string, Map hints = [:] ) {
+        parse(new StringBufferInputStream(string), hints)
+    }
+
+    /**
+     *
+     * @param bytes
+     * @param hints
+     * @return
+     */
+    public parse( byte[] bytes, Map hints = [:] ) {
+        parse(new ByteArrayInputStream(bytes), hints)
+    }
+
+    /**
+	 * Parses the given input stream and returns the matrix in that file
+     *
 	 * @param file	File object to read
-	 * @param hints	Map with hints for the reader. Might include keys like 'startRow', 'endRow' and 'sheet'. 
+	 * @param hints	Map with hints for the reader. Might include keys like 'startRow', 'endRow' and 'sheet'.
 	 * 				Readers implementing this interface may or may not listen to the hints given. See the documentation
 	 * 				of different implementing classes.
 	 * @return		Two-dimensional data matrix of structure:
-	 * 				[ 
+	 * 				[
 	 * 					[ 1, 3, 5 ] // First line
 	 * 					[ 9, 1, 2 ] // Second line
 	 * 				]
-	 * 				The matrix must be rectangular, so all lines should contain
-	 * 				the same number of values
 	 */
-	public def parse( File file, Map hints );
+    public abstract parse( InputStream inputStream, Map hints )
 	
 	/**
 	 * Returns a description for this reader
 	 * @return	Human readable description
 	 */
-	public String getDescription();
+	public abstract String getDescription()
 }

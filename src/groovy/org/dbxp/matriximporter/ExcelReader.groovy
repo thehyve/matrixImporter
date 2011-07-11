@@ -1,10 +1,11 @@
-package org.dbxp.matriximporter;
+package org.dbxp.matriximporter
 
-import java.io.File
-
-import org.apache.poi.ss.usermodel.*
 import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator
+import org.apache.poi.hssf.usermodel.HSSFSheet
+import org.apache.poi.hssf.usermodel.HSSFWorkbook
 import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator
+import org.apache.poi.xssf.usermodel.XSSFWorkbook
+import org.apache.poi.ss.usermodel.*
 
 /**
  * This class is capable of importing Excel (.xls and .xlsx) files
@@ -12,17 +13,19 @@ import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator
  * @author robert
  *
  */
-public class ExcelReader implements MatrixReader {
-	public ExcelReader() {}
+public class ExcelReader extends MatrixReader {
 
-	/** 
-	 * Returns true if this class is able to parse
-	 * the given file
-	 * @param file	File object to read
-	 * @return	True if this class can parse the given file, false otherwise
-	 */
-	public boolean canParse( File file ) {
-		return ( file.getName().toLowerCase() =~ /\.xlsx?$/ ) as boolean;
+    /**
+     * Returns true if this class is able to parse files with a given name. This
+     * is done by checking if the extension equals '.xls' or '.xlsx'. Also
+     * returns true if fileName is null or ''.
+     *
+     * @param file	File object to read
+     * @return true if the reader can parse the file, false otherwise
+     */
+	public boolean canParse( Map hints = [:] ) {
+		def fileName = hints.fileName
+		return fileName ? fileName.matches(/.+\.(xls|xlsx)$/) : true
 	}
 
 	/**
@@ -43,11 +46,11 @@ public class ExcelReader implements MatrixReader {
 	 * 				The matrix must be rectangular, so all lines should contain
 	 * 				the same number of values
 	 */
-	public def parse( File file, Map hints ) {
-		def sheetIndex = hints.sheetIndex ?: 0;
-		
+	public def parse( InputStream inputStream, Map hints ) {
+		def sheetIndex = hints.sheetIndex ?: 0
+
 		// Read the file with Apache POI 
-		def workbook = WorkbookFactory.create( file.newInputStream() )
+		def workbook = WorkbookFactory.create( inputStream )
 		def sheet = workbook.getSheetAt(sheetIndex)
 		
 		def df = new DataFormatter()
@@ -56,20 +59,20 @@ public class ExcelReader implements MatrixReader {
 
 		// Is this an XLS (old fashioned Excel file)?
 		try {
-			formulaEvaluator = new HSSFFormulaEvaluator(sheet, workbook);
+			formulaEvaluator = new HSSFFormulaEvaluator((HSSFSheet) sheet, (HSSFWorkbook) workbook)
 		} catch (Exception e) {
 			log.error ".import wizard could not create Excel (XLS) formula evaluator, skipping to Excel XML (XLSX)"
 		}
 
 		// Or is this an XLSX (modern style Excel file)?
 		if (formulaEvaluator==null) try {
-			formulaEvaluator = new XSSFFormulaEvaluator(workbook);
+			formulaEvaluator = new XSSFFormulaEvaluator((XSSFWorkbook) workbook)
 		} catch (Exception e) {
 			log.error ".import wizard could not create Excel XML (XLSX) formula evaluator either, unknown Excel formula format?"
 		}
 
 		// Determine start and end row numbers to be read
-		def startRow = hints.startRow
+		def startRow = hints.startRow ?: 0
 		if( !startRow || startRow < sheet.firstRowNum || startRow > sheet.lastRowNum )
 			startRow = sheet.firstRowNum
 		

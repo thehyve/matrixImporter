@@ -19,7 +19,7 @@ public abstract class MatrixReader {
 	 * @param hints a map containing hints. Right now, only 'fileName' is used
 	 * @return	True if this class can parse the given object or empty input, false otherwise
 	 */
-	public abstract boolean canParse ( Map hints)
+	public abstract boolean canParse ( Map hints )
 
     /**
      *

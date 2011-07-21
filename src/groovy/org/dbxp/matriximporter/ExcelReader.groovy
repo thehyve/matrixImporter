@@ -1,5 +1,6 @@
 package org.dbxp.matriximporter
 
+import org.apache.commons.logging.LogFactory
 import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator
 import org.apache.poi.hssf.usermodel.HSSFSheet
 import org.apache.poi.hssf.usermodel.HSSFWorkbook
@@ -14,6 +15,8 @@ import org.apache.poi.ss.usermodel.*
  *
  */
 public class ExcelReader extends MatrixReader {
+
+    private static def log = LogFactory.getLog(this)
 
     /**
      * Returns true if this class is able to parse files with a given name. This

@@ -1,11 +1,6 @@
 package org.dbxp.matriximporter
 
 import org.apache.commons.logging.LogFactory
-import org.apache.poi.hssf.usermodel.HSSFFormulaEvaluator
-import org.apache.poi.hssf.usermodel.HSSFSheet
-import org.apache.poi.hssf.usermodel.HSSFWorkbook
-import org.apache.poi.xssf.usermodel.XSSFFormulaEvaluator
-import org.apache.poi.xssf.usermodel.XSSFWorkbook
 import org.apache.poi.ss.usermodel.*
 
 /**
@@ -50,41 +45,24 @@ public class ExcelReader extends MatrixReader {
 	 * 				the same number of values
 	 */
 	public def parse( InputStream inputStream, Map hints ) {
+
 		def sheetIndex = hints.sheetIndex ?: 0
 
 		// Read the file with Apache POI 
 		def workbook = WorkbookFactory.create( inputStream )
 		def sheet = workbook.getSheetAt(sheetIndex)
 		
-		def df = new DataFormatter()
+		def dataFormatter = new DataFormatter()
 		def dataMatrix = []
-		def formulaEvaluator = null
+		FormulaEvaluator formulaEvaluator = workbook.creationHelper.createFormulaEvaluator()
 
-		// Is this an XLS (old fashioned Excel file)?
-		try {
-			formulaEvaluator = new HSSFFormulaEvaluator((HSSFSheet) sheet, (HSSFWorkbook) workbook)
-		} catch (Exception e) {
-			log.error ".import wizard could not create Excel (XLS) formula evaluator, skipping to Excel XML (XLSX)"
-		}
+        if (hints.endRow == null) hints.endRow = sheet.lastRowNum
 
-		// Or is this an XLSX (modern style Excel file)?
-		if (formulaEvaluator==null) try {
-			formulaEvaluator = new XSSFFormulaEvaluator((XSSFWorkbook) workbook)
-		} catch (Exception e) {
-			log.error ".import wizard could not create Excel XML (XLSX) formula evaluator either, unknown Excel formula format?"
-		}
-
-		// Determine start and end row numbers to be read
-		def startRow = hints.startRow ?: 0
-		if( !startRow || startRow < sheet.firstRowNum || startRow > sheet.lastRowNum )
-			startRow = sheet.firstRowNum
-		
-		def endRow = hints.endRow
-		if( !endRow || endRow < sheet.firstRowNum || endRow > sheet.lastRowNum )
-			endRow = sheet.lastRowNum
+        def startRow =  forceValueInRange(hints.startRow, sheet.firstRowNum..sheet.lastRowNum)
+        def endRow =    forceValueInRange(hints.endRow, startRow..sheet.lastRowNum)
 
 		// Determine amount of columns: the number of columns in the first row
-		def columnCount = sheet.getRow(startRow)?.getLastCellNum()
+		def columnCount = sheet.getRow(startRow)?.lastCellNum
 
 		// Walk through all rows
 		(startRow..endRow).each { rowIndex ->
@@ -98,37 +76,45 @@ public class ExcelReader extends MatrixReader {
 			if (excelRow)
 				columnCount.times { columnIndex ->
 
-					// Read the cell, even is it a blank
-					def cell = excelRow.getCell(columnIndex, Row.CREATE_NULL_AS_BLANK)
-					// Set the cell type to string, this prevents any kind of formatting
+					def cell = excelRow.getCell(columnIndex)
 
-					// It is a numeric cell?
-					if (cell.cellType == Cell.CELL_TYPE_NUMERIC)
-					// It isn't a date cell?
-					if (!DateUtil.isCellDateFormatted(cell))
-						cell.setCellType(Cell.CELL_TYPE_STRING)
+                    def cellValue = ''
 
-					switch (cell.cellType) {
-						case Cell.CELL_TYPE_STRING:     dataMatrixRow.add( cell.stringCellValue )
+					switch (cell?.cellType) {
+						case Cell.CELL_TYPE_STRING:
+                            cellValue = cell.stringCellValue
 							break
-						case Cell.CELL_TYPE_NUMERIC:    dataMatrixRow.add( df.formatCellValue(cell) )
+						case Cell.CELL_TYPE_NUMERIC:
+                            if (DateUtil.isCellDateFormatted(cell))
+                                cellValue = dataFormatter.formatCellValue(cell)
+                            else {
+                                // Set the cell type to string, this prevents any kind of formatting
+                                cell.cellType = Cell.CELL_TYPE_STRING
+                                cellValue = cell.stringCellValue
+                            }
 							break
-						case Cell.CELL_TYPE_FORMULA:    (cell != null) ? dataMatrixRow.add(formulaEvaluator.evaluateInCell(cell)) :
-						dataMatrixRow.add('')
+						case Cell.CELL_TYPE_FORMULA:
+                            cellValue = cell ? formulaEvaluator.evaluate(cell) : ''
 							break
-						default:                        dataMatrixRow.add( '' )
-
+						default:
+                            break
 					}
+
+                    dataMatrixRow.add(cellValue)
 				}
 
-			if ( dataMatrixRow.any{it} ) // is at least 1 of the cells non empty?
-				dataMatrix.add(dataMatrixRow)
+			if ( dataMatrixRow.any {it} ) // is at least 1 of the cells non empty?
+				dataMatrix << dataMatrixRow
 		}
-
 		dataMatrix
-
 	}
-	
+
+    private forceValueInRange(Integer suggested, Range range) {
+        if (suggested < range.from) range.from
+        else if (suggested > range.to) range.to
+        else suggested
+    }
+
 	/**
 	* Returns a description for this reader
 	* @return	Human readable description

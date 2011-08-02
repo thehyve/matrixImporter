@@ -8,6 +8,8 @@ package org.dbxp.matriximporter
  */
 public class CsvReader extends MatrixReader {
 
+    private static final int readAheadLimit = 16384
+
 	/**
 	 * Returns true if this class is able to parse files with a given name. This
      * is done by checking if the extension equals '.csv' or '.txt'. Also
@@ -16,7 +18,7 @@ public class CsvReader extends MatrixReader {
 	 * @param file	File object to read
 	 * @return true if the reader can parse the file, false otherwise
 	 */
-	public boolean canParse( Map hints = [:] ) {
+    public boolean canParse( Map hints = [:] ) {
 		def fileName = hints.fileName
         return fileName ? fileName.matches(/.+\.(csv|txt)$/) : true
 	}
@@ -50,54 +52,44 @@ public class CsvReader extends MatrixReader {
 	* 				]
 	*/
 	def parse( InputStream inputStream, Map hints ) {
-		// Count the number of lines in the file
-		def numLines = 0
 
-//		inputStream.eachLine { numLines++ }
-//        inputStream.reset() // start
-	
-		// Determine the start and end row if none is given
-		def startRow = hints.startRow
-		if( !startRow || startRow < 0 || startRow > numLines )
-			startRow = 0
-	
-		def endRow = hints.endRow
-		if( !endRow || endRow < startRow ) {
-			endRow = Long.MAX_VALUE
-		}
+        if (hints.endRow == null) hints.endRow = Integer.MAX_VALUE
+
+        def startRow =  forceValueInRange(hints.startRow, 0, Integer.MAX_VALUE)
+        def endRow =    forceValueInRange(hints.endRow, startRow, Integer.MAX_VALUE)
+
+        BufferedReader bufferedReader = new BufferedReader( new InputStreamReader( inputStream ) )
 
 		String delimiter = hints.delimiter
 		if( !delimiter ) {
-			delimiter = determineDelimiterFromInput( inputStream, hints.threshold ?: 5 )
-			
-			// If no delimiter could be determined, raise an error
-			if( !delimiter )
-				throw new Exception( "CSV delimiter could not be automatically determined for inputStream." )
+			delimiter = determineDelimiterFromInput( bufferedReader, hints.threshold ?: 5 )
 		}
 	
 		// Now loop through all rows, retrieving data from the file
-		ArrayList data = []
-		inputStream.eachLine(0) { String line, int lineNumber ->
+		def dataMatrix = []
+		bufferedReader.eachLine(0) { String line, int lineNumber ->
 			if( lineNumber >= startRow && lineNumber <= endRow ) {
 
-                data << line.split( delimiter )
+                dataMatrix << (line.split( delimiter ) as ArrayList)
 
 			}
 		}
 
+        bufferedReader.close()
+
         // pad lines shorter than longest line with empty strings if requested
         if (hints.makeRowsEqualLength) {
 
-            def maxSize = data*.size().max{ it }
+            def maxSize = dataMatrix*.size().max{ it }
 
-            data.eachWithIndex{ line, i ->
+            dataMatrix.eachWithIndex{ line, i ->
 
-                data[i] += [""] * (maxSize - line.size())
+                dataMatrix[i] += [""] * (maxSize - line.size())
 
             }
         }
 	
-		return data
+		return dataMatrix
 	}
 	
 	/**
@@ -106,44 +98,44 @@ public class CsvReader extends MatrixReader {
 	 * @param input	File to parse
 	 * @return		Most probable delimiter. If none could be determined, null is given.
 	 */
-	protected String determineDelimiterFromInput( InputStream inputStream, int threshold ) {
-		def delimiterCounts = [ ",": 0, ";": 0, "\t": 0 ]
-		def possibleDelimiters = delimiterCounts.keySet().asList()
+	protected char determineDelimiterFromInput( Reader reader, int threshold ) {
 
-		// We stop counting after 10 lines, in order to speed up the process. If no apparent winner
-		// is found after 10 lines, we won't find it by analysing the whole file
-		def countLines = 10
-		
-		// We don't use inputStream.eachLine() here, since the closure that is called with that method
-		// doesn't support break or continue statements.
-        def r = new BufferedReader( new InputStreamReader( inputStream ) )
-        def lineNumber = 0
-        for( def line = r.readLine(); null != line; line = r.readLine() ) {
 
-            // Count the number of occurrences of all delimiters
-            possibleDelimiters.each { delimiter ->
-                delimiterCounts[ delimiter ] += line.count( delimiter )
-            }
+        def possibleDelimiters = [',' as char, ';' as char, '\t' as char]
+        def delimiterCounts = [:]
+        possibleDelimiters.each{delimiterCounts[it as int] = 0}
 
-            lineNumber++
+        reader.mark(readAheadLimit)
 
-            if( lineNumber >= countLines )
-                break
+        // Read characters in a buffer
+        char[] characterBuffer = new char[readAheadLimit - 1]
+        int charactersRead  = reader.read((char[]) characterBuffer, 0, readAheadLimit - 1)
+
+        reader.reset()
+
+        // tally occurrences of the possible delimiters
+        characterBuffer[0..charactersRead - 1].each { char c ->
+            if (c in possibleDelimiters) delimiterCounts[c as int]++
         }
-		
+        
 		// Determine the best delimiter. It is only returned if more than value
 		// of 'threshold' of those characters have been found
-		def bestDelimiter = null
+		char bestDelimiter = 0
 		def bestCount = 0
-		
-		delimiterCounts.each { 
-			if( it.value > bestCount && it.value >= threshold ) {
-				bestCount = it.value
-				bestDelimiter = it.key
-			}
-		}
-		
+
+        possibleDelimiters.each {
+            def count = delimiterCounts[it as int]
+
+            if( count > bestCount && count >= threshold) {
+                bestCount = count
+                bestDelimiter = it
+            }
+        }
+
+        if( !bestDelimiter )
+            throw new Exception( "CSV delimiter could not be automatically determined for inputStream." )
+
+
 		return bestDelimiter
 	}
-
 }

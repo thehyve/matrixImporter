@@ -58,8 +58,8 @@ public class ExcelReader extends MatrixReader {
 
         if (hints.endRow == null) hints.endRow = sheet.lastRowNum
 
-        def startRow =  forceValueInRange(hints.startRow, sheet.firstRowNum..sheet.lastRowNum)
-        def endRow =    forceValueInRange(hints.endRow, startRow..sheet.lastRowNum)
+        def startRow =  forceValueInRange(hints.startRow, sheet.firstRowNum, sheet.lastRowNum)
+        def endRow =    forceValueInRange(hints.endRow, startRow, sheet.lastRowNum)
 
 		// Determine amount of columns: the number of columns in the first row
 		def columnCount = sheet.getRow(startRow)?.lastCellNum
@@ -108,12 +108,6 @@ public class ExcelReader extends MatrixReader {
 		}
 		dataMatrix
 	}
-
-    private forceValueInRange(Integer suggested, Range range) {
-        if (suggested < range.from) range.from
-        else if (suggested > range.to) range.to
-        else suggested
-    }
 
 	/**
 	* Returns a description for this reader

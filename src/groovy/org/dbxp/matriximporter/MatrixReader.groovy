@@ -65,7 +65,11 @@ public abstract class MatrixReader {
 	 * 				]
 	 */
     public abstract parse( InputStream inputStream, Map hints )
-	
+
+    protected forceValueInRange(Integer suggested, Integer min, Integer max) {
+        suggested < min ? min : Math.min(suggested, max)
+    }
+
 	/**
 	 * Returns a description for this reader
 	 * @return	Human readable description

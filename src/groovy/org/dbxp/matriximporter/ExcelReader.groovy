@@ -78,29 +78,30 @@ public class ExcelReader extends MatrixReader {
 
 					def cell = excelRow.getCell(columnIndex)
 
-                    def cellValue = ''
+                    def stringValue = ''
 
 					switch (cell?.cellType) {
-						case Cell.CELL_TYPE_STRING:
-                            cellValue = cell.stringCellValue
-							break
 						case Cell.CELL_TYPE_NUMERIC:
                             if (DateUtil.isCellDateFormatted(cell))
-                                cellValue = dataFormatter.formatCellValue(cell)
+                                stringValue = dataFormatter.formatCellValue(cell)
                             else {
                                 // Set the cell type to string, this prevents any kind of formatting
                                 cell.cellType = Cell.CELL_TYPE_STRING
-                                cellValue = cell.stringCellValue
+                                stringValue = cell.stringCellValue
                             }
 							break
+                        case Cell.CELL_TYPE_STRING:
+                            stringValue = cell.stringCellValue
+                            break
 						case Cell.CELL_TYPE_FORMULA:
-                            cellValue = cell ? formulaEvaluator.evaluate(cell) : ''
+                            CellValue cellValue = formulaEvaluator.evaluate(cell)
+                            stringValue = cellValue.numberValue ?: cellValue.stringValue
 							break
 						default:
                             break
 					}
 
-                    dataMatrixRow.add(cellValue)
+                    dataMatrixRow.add(stringValue)
 				}
 
 			if ( dataMatrixRow.any {it} ) // is at least 1 of the cells non empty?

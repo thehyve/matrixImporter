@@ -63,6 +63,8 @@ public abstract class MatrixReader {
 	 * 					[ 1, 3, 5 ] // First line
 	 * 					[ 9, 1, 2 ] // Second line
 	 * 				]
+	 * 				The matrix must be rectangular, so all lines should contain
+	 * 				the same number of values. All values must be String objects (or null).
 	 */
     public abstract parse( InputStream inputStream, Map hints )
 

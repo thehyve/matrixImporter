@@ -34,7 +34,7 @@ public class ExcelReader extends MatrixReader {
 	 * 						Defaults to the first row in the file
 	 * 			endRow		0-based row number of the last row to read.	 (2 means the 3rd row is the last to read)
 	 * 						Defaults to the last row in the file
-	 * 			sheedIndx	0-based index of the excel sheet to be read
+	 * 			sheetIndex	0-based index of the excel sheet to be read
 	 * 						Defaults to 0
 	 * @return		Two-dimensional data matrix of structure:
 	 * 				[ 
@@ -42,7 +42,7 @@ public class ExcelReader extends MatrixReader {
 	 * 					[ 9, 1, 2 ] // Second line
 	 * 				]
 	 * 				The matrix must be rectangular, so all lines should contain
-	 * 				the same number of values
+	 * 				the same number of values. All values will be String objects (or null).
 	 */
 	public def parse( InputStream inputStream, Map hints ) {
 

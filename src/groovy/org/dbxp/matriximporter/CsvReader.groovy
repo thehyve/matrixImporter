@@ -15,7 +15,13 @@ public class CsvReader extends MatrixReader {
      * is done by checking if the extension equals '.csv' or '.txt'. Also
      * returns true if fileName is null or ''.
      *
-	 * @param file	File object to read
+	 * @param hints	Hints for reading the csvfile. Possible keys are:
+	 * 			startRow	0-based row number of the first row to read. (1 means start reading from the second row)
+	 * 						Defaults to the first row in the file
+	 * 			endRow		0-based row number of the last row to read.	 (2 means the 3rd row is the last to read)
+	 * 						Defaults to the last row in the file
+	 * 			delimiter	Delimiter that is used between the different fields on a line. Common values are , ; or <tab>.
+	 * 						Defaults to the character , ; or <tab> that is most common in the file.
 	 * @return true if the reader can parse the file, false otherwise
 	 */
     public boolean canParse( Map hints = [:] ) {

@@ -104,12 +104,12 @@ class MatrixImporter {
                 def matrix, parseInfo
 
                 try {
-					// Reset inputStream, since it may have been used by other readers
+                    // Reset inputStream, since it may have been used by other readers
 					if( inputStream.markSupported() ) {
 						inputStream.reset();
 					}
-						
-                    parsedFile = reader.parse( inputStream, hints )
+                    
+                    (matrix, parseInfo) = reader.parse( inputStream, hints )
                 } catch (e) {
                     // we take it an exception means this reader was unable to parse
                     // the input.

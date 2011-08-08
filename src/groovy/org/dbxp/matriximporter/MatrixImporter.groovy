@@ -57,7 +57,7 @@ class MatrixImporter {
      * @return
      */
     public importString( String string, Map hints  = [:] ) {
-        importInputStream(new StringBufferInputStream(string), hints)
+        importInputStream( new ByteArrayInputStream(string.getBytes("UTF-8")) , hints)
     }
 
     /**
@@ -92,6 +92,10 @@ class MatrixImporter {
             importInputStream( inputStream, hints, false)
     }
 	public importInputStream( InputStream inputStream, Map hints, Boolean returnInfo) {
+		// Set a mark on the beginning of this inputstream, in order
+		// to be able to reset this stream when start reading with a new reader
+		if( inputStream.markSupported() )
+			inputStream.mark( Integer.MAX_VALUE );
 
 		// Loop through all registered readers, and parse the file using
 		// the first reader that is able to parse the file.
@@ -100,6 +104,11 @@ class MatrixImporter {
                 def matrix, parseInfo
 
                 try {
+					// Reset inputStream, since it may have been used by other readers
+					if( inputStream.markSupported() ) {
+						inputStream.reset();
+					}
+						
                     parsedFile = reader.parse( inputStream, hints )
                 } catch (e) {
                     // we take it an exception means this reader was unable to parse

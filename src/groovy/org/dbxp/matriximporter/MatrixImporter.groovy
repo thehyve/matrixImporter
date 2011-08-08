@@ -115,7 +115,7 @@ class MatrixImporter {
                     // the input.
 
                     println 'Unable to parse using reader: ' + reader.class + ' with description: ' + reader.description + '.'
-                    println e
+                    e.printStackTrace();
                     log.info('Unable to parse using reader: ' + reader.class + ' with description: ' + reader.description + '.', e)
                 }
 

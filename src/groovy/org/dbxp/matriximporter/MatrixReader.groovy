@@ -66,7 +66,7 @@ public abstract class MatrixReader {
 	 * 				The matrix must be rectangular, so all lines should contain
 	 * 				the same number of values. All values must be String objects (or null).
 	 */
-    public abstract parse( InputStream inputStream, Map hints )
+    public abstract ArrayList parse( InputStream inputStream, Map hints )
 
     protected forceValueInRange(Integer suggested, Integer min, Integer max) {
         suggested < min ? min : Math.min(suggested, max)

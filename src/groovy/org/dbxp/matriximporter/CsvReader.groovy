@@ -9,6 +9,8 @@ package org.dbxp.matriximporter
 public class CsvReader extends MatrixReader {
 
     private static final int readAheadLimit = 16384
+    private static final Map<String, Character> delimiterNameMap = [comma: ',' as char, 'semi-colon': ';' as char, tab: '\t' as char]
+
 
 	/**
 	 * Returns true if this class is able to parse files with a given name. This
@@ -57,7 +59,7 @@ public class CsvReader extends MatrixReader {
 	* 					[ 9, 1, 2 ] // Second line
 	* 				]
 	*/
-	def parse( InputStream inputStream, Map hints ) {
+	ArrayList parse( InputStream inputStream, Map hints ) {
 
         if (hints.endRow == null) hints.endRow = Integer.MAX_VALUE
 
@@ -66,7 +68,10 @@ public class CsvReader extends MatrixReader {
 
         BufferedReader bufferedReader = new BufferedReader( new InputStreamReader( inputStream ) )
 
-		String delimiter = hints.delimiter
+		Character delimiter = hints.delimiter
+        if (delimiterNameMap.containsKey(hints.delimiterName))
+            delimiter = delimiterNameMap[hints.delimiterName]
+
 		if( !delimiter ) {
 			delimiter = determineDelimiterFromInput( bufferedReader, hints.threshold ?: 5 )
 		}
@@ -76,7 +81,7 @@ public class CsvReader extends MatrixReader {
 		bufferedReader.eachLine(0) { String line, int lineNumber ->
 			if( lineNumber >= startRow && lineNumber <= endRow ) {
 
-                dataMatrix << (line.split( delimiter ) as ArrayList)
+                dataMatrix << (line.split( delimiter.toString() ) as ArrayList)
 
 			}
 		}
@@ -95,7 +100,10 @@ public class CsvReader extends MatrixReader {
             }
         }
 	
-		return dataMatrix
+		return [dataMatrix,
+                       [delimiter: delimiter,
+                        delimiterName: delimiterNameMap.find {it.value == delimiter}.key,
+                        delimiterNameMap: delimiterNameMap]]
 	}
 	
 	/**
@@ -104,24 +112,22 @@ public class CsvReader extends MatrixReader {
 	 * @param input	File to parse
 	 * @return		Most probable delimiter. If none could be determined, null is given.
 	 */
-	protected char determineDelimiterFromInput( Reader reader, int threshold ) {
+	protected Character determineDelimiterFromInput( Reader reader, int threshold ) {
 
-
-        def possibleDelimiters = [',' as char, ';' as char, '\t' as char]
         def delimiterCounts = [:]
-        possibleDelimiters.each{delimiterCounts[it as int] = 0}
+        delimiterNameMap.each {delimiterCounts[it.value as int] = 0}
 
         reader.mark(readAheadLimit)
 
         // Read characters in a buffer
         char[] characterBuffer = new char[readAheadLimit - 1]
-        int charactersRead  = reader.read((char[]) characterBuffer, 0, readAheadLimit - 1)
+        int charactersRead = reader.read((char[]) characterBuffer, 0, readAheadLimit - 1)
 
         reader.reset()
 
         // tally occurrences of the possible delimiters
         characterBuffer[0..charactersRead - 1].each { char c ->
-            if (c in possibleDelimiters) delimiterCounts[c as int]++
+            if (c in delimiterNameMap*.value) delimiterCounts[c as int]++
         }
         
 		// Determine the best delimiter. It is only returned if more than value
@@ -129,7 +135,7 @@ public class CsvReader extends MatrixReader {
 		char bestDelimiter = 0
 		def bestCount = 0
 
-        possibleDelimiters.each {
+        delimiterNameMap*.value.each { char it ->
             def count = delimiterCounts[it as int]
 
             if( count > bestCount && count >= threshold) {

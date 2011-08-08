@@ -85,18 +85,21 @@ class MatrixImporter {
 	 * 					[ 9, 1, 2 ] // Second line
 	 * 				]
 	 */
-	public importInputStream( InputStream inputStream, Map hints = [:] ) {
+	public importInputStream( InputStream inputStream ) {
+        importInputStream( inputStream, [:], false)
+    }
+    public importInputStream( InputStream inputStream, Map hints ) {
+            importInputStream( inputStream, hints, false)
+    }
+	public importInputStream( InputStream inputStream, Map hints, Boolean returnInfo) {
 
 		// Loop through all registered readers, and parse the file using
 		// the first reader that is able to parse the file.
 		for( reader in readers ) {
 			if( reader.canParse( hints ) ) {
-                def parsedFile
+                def matrix, parseInfo
 
                 try {
-					// Reset inputStream, since it may have been used by other readers
-					inputStream.reset();
-					
                     parsedFile = reader.parse( inputStream, hints )
                 } catch (e) {
                     // we take it an exception means this reader was unable to parse
@@ -110,14 +113,14 @@ class MatrixImporter {
                 // Only return the value if the file has been correctly parsed
                 // (i.e. the structure != null). Otherwise, we should try to parse
                 // the file using another reader (if applicable)
-                if( parsedFile != null )
-                    return parsedFile
-
+                if( matrix ) {
+                    return returnInfo ? [matrix, [readerClassName: reader.class.simpleName] + parseInfo] : matrix
+                }
 			}
 		}
 
 		// If parsing didn't work out, return null
-		return null
+		returnInfo ? [null, null] : null
 	}
 
 	/**

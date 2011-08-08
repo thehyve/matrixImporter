@@ -22,7 +22,16 @@ class MatrixImporterTests extends GrailsUnitTestCase {
         assert matrix[0].size == 154
     }
 
-    void testMockDiogenes() {
+    void testMockDiogenesEXCEL() {
+        def excelReader = new ExcelReader()
+
+        def matrix = excelReader.parse(new File('test_data/DiogenesMockData.xlsx'))
+
+        assert matrix.size == 1986
+        assert matrix[0].size == 163
+    }
+
+    void testMockDiogenesTABDELIMITED() {
         def csvReader = new CsvReader()
 
         def matrix = csvReader.parse(new File('test_data/DiogenesMockData.txt'))

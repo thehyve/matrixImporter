@@ -37,14 +37,14 @@ public class ExcelReader extends MatrixReader {
 	 * 			sheetIndex	0-based index of the excel sheet to be read
 	 * 						Defaults to 0
 	 * @return		Two-dimensional data matrix of structure:
-	 * 				[ 
+	 * 				[
 	 * 					[ 1, 3, 5 ] // First line
 	 * 					[ 9, 1, 2 ] // Second line
 	 * 				]
 	 * 				The matrix must be rectangular, so all lines should contain
 	 * 				the same number of values. All values will be String objects (or null).
 	 */
-	public def parse( InputStream inputStream, Map hints ) {
+	public ArrayList parse( InputStream inputStream, Map hints ) {
 
 		def sheetIndex = hints.sheetIndex ?: 0
 
@@ -94,8 +94,15 @@ public class ExcelReader extends MatrixReader {
                             stringValue = cell.stringCellValue
                             break
 						case Cell.CELL_TYPE_FORMULA:
-                            CellValue cellValue = formulaEvaluator.evaluate(cell)
-                            stringValue = cellValue.numberValue ?: cellValue.stringValue
+                            try {
+                                CellValue cellValue = formulaEvaluator.evaluate(cell)
+
+                                if (cellValue.cellType == Cell.CELL_TYPE_STRING) stringValue = cellValue.stringValue
+                                else if (cellValue.cellType == Cell.CELL_TYPE_NUMERIC) stringValue = cellValue.numberValue
+
+                            } catch (e) {
+                                log.error("Unable to parse formula of cell at row: $rowIndex, column: $columnIndex.", e)
+                            }
 							break
 						default:
                             break
@@ -107,7 +114,7 @@ public class ExcelReader extends MatrixReader {
 			if ( dataMatrixRow.any {it} ) // is at least 1 of the cells non empty?
 				dataMatrix << dataMatrixRow
 		}
-		dataMatrix
+		[dataMatrix, [sheetIndex: sheetIndex, numberOfSheets: workbook.numberOfSheets]]
 	}
 
 	/**

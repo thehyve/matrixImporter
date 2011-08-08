@@ -38,7 +38,7 @@ public abstract class MatrixReader {
      * @return
      */
     public parse( String string, Map hints = [:] ) {
-        parse(new StringBufferInputStream(string), hints)
+        parse(new ByteArrayInputStream(string.getBytes("UTF-8")), hints)
     }
 
     /**

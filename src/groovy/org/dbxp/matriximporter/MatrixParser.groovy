@@ -40,7 +40,7 @@ public abstract class MatrixParser {
      * @return
      */
     public parse( String string, Map hints = [:] ) {
-        parse(new StringReader(string), hints)
+        parse(new ByteArrayInputStream(string.getBytes("UTF-8")), hints)
     }
 
     /**
@@ -53,18 +53,12 @@ public abstract class MatrixParser {
         parse(new ByteArrayInputStream(bytes), hints)
     }
 
-    public ArrayList parse( InputStream inputStream, Map hints ) {
-        def reader = new BufferedReader(new InputStreamReader(inputStream))
-
-        parse(reader, hints)
-    }
-
     /**
 	 * Parses the given input stream and returns the matrix in that file
      *
 	 * @param file	File object to read
-	 * @param hints	Map with hints for the reader. Might include keys like 'startRow', 'endRow' and 'sheet'.
-	 * 				Readers implementing this interface may or may not listen to the hints given. See the documentation
+	 * @param hints	Map with hints for the parser. Might include keys like 'startRow', 'endRow' and 'sheet'.
+	 * 				Parsers implementing this interface may or may not listen to the hints given. See the documentation
 	 * 				of different implementing classes.
 	 * @return		Two-dimensional data matrix of structure:
 	 * 				[
@@ -74,14 +68,14 @@ public abstract class MatrixParser {
 	 * 				The matrix must be rectangular, so all lines should contain
 	 * 				the same number of values. All values must be String objects (or null).
 	 */
-    public abstract ArrayList parse( Reader reader, Map hints )
+    public abstract ArrayList parse( InputStream inputStream, Map hints )
 
     protected forceValueInRange(Integer suggested, Integer min, Integer max) {
         suggested < min ? min : Math.min(suggested, max)
     }
 
 	/**
-	 * Returns a description for this reader
+	 * Returns a description for this parser
 	 * @return	Human readable description
 	 */
 	public abstract String getDescription()

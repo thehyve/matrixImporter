@@ -57,7 +57,7 @@ class MatrixImporter {
      * @return
      */
     public importString( String string, Map hints  = [:] ) {
-        importReader( new StringReader(string) , hints)
+        importInputStream( new ByteArrayInputStream(string.getBytes("UTF-8")) , hints)
     }
 
     /**
@@ -87,26 +87,18 @@ class MatrixImporter {
 	 */
 	public importInputStream( InputStream inputStream, Map hints = [:], Boolean returnInfo = false ) {
 
-        importReader(new BufferedReader(new InputStreamReader(inputStream)), hints, returnInfo)
+        def bis = new BufferedInputStream(inputStream)
 
-    }
-
-    public importReader(Reader reader, Map hints = [:], Boolean returnInfo = false ) {
-
-        if (!reader.markSupported()) {
-            throw new RuntimeException('The given reader (' + reader.class.name + ') does not support marking the stream. This means the contained inputstream can not be reset.')
-        }
-
-        reader.mark(MatrixParser.readAheadLimit)
+        bis.mark(MatrixParser.readAheadLimit)
 
         for( parser in parsers ) {
 			if( parser.canParse( hints ) ) {
                 def matrix, parseInfo
 
                 try {
-                    reader.reset()
+                    bis.reset()
 
-                    (matrix, parseInfo) = parser.parse( reader, hints )
+                    (matrix, parseInfo) = parser.parse( bis, hints )
                 } catch (e) {
                     // we take it an exception means this parser was unable to parse
                     // the input.

@@ -8,7 +8,7 @@ package org.dbxp.matriximporter
  */
 public class CsvParser extends MatrixParser{
 
-    private static final Map<String, Character> delimiterNameMap = [comma: ',' as char, 'semi-colon': ';' as char, tab: '\t' as char]
+    private static final Map delimiterNameMap = [comma: ','.bytes[0], 'semi-colon': ';'.bytes[0], tab: '\t'.bytes[0]]
 
 
 	/**
@@ -64,32 +64,36 @@ public class CsvParser extends MatrixParser{
      * 			    - String delimiterName, human readable version of the delimiter (see delimiterNameMap)
      * 			    - delimiterNameMap, maps human readable versions of delimiters to delimiters
      * 			    */
-    ArrayList parse( Reader reader, Map hints ) {
+    ArrayList parse( InputStream inputStream, Map hints ) {
+
+        if (!inputStream.markSupported()) {
+            throw new RuntimeException('The given inputstream (' + inputStream.class.name + ') does not support marking. Please supply one that does.')
+        }
 
         if (hints.endRow == null) hints.endRow = Integer.MAX_VALUE
 
         def startRow =  forceValueInRange(hints.startRow, 0, Integer.MAX_VALUE)
         def endRow =    forceValueInRange(hints.endRow, startRow, Integer.MAX_VALUE)
 
-		char delimiter = hints.delimiter
+		byte delimiter = hints.delimiter
         if (delimiterNameMap.containsKey(hints.delimiterName))
-            delimiter = delimiterNameMap[hints.delimiterName]
+            delimiter = (byte) delimiterNameMap[hints.delimiterName]
 
 		if( !delimiter ) {
-			delimiter = determineDelimiterFromInput( reader, hints.threshold ?: 5 )
+			delimiter = determineDelimiterFromInput( inputStream, hints.threshold ?: 5 )
 		}
 
 		// Now loop through all rows, retrieving data from the file
 		def dataMatrix = []
-		reader.eachLine(0) { String line, int lineNumber ->
+		inputStream.eachLine(0) { String line, int lineNumber ->
 			if( lineNumber >= startRow && lineNumber <= endRow ) {
 
-                dataMatrix << (line.split( delimiter.toString() ) as ArrayList)
+                dataMatrix << (line.split( (delimiter as char).toString() ) as ArrayList)
 
 			}
 		}
 
-        reader.close()
+        inputStream.close()
 
         // pad lines shorter than longest line with empty strings if requested
         if (hints.makeRowsEqualLength) {
@@ -112,33 +116,35 @@ public class CsvParser extends MatrixParser{
 	/**
 	 * Tries to guess the delimiter used in this csv file. This is done by looking which 
 	 * character from , ; and <tab> is most common.
-	 * @param reader Reader to parse
+	 * @param inputStream InputStream to parse
 	 * @return		Most probable delimiter. If none could be determined, null is given.
 	 */
-	protected Character determineDelimiterFromInput( Reader reader, int threshold ) {
+	protected byte determineDelimiterFromInput( InputStream inputStream, int threshold ) {
 
         def delimiterCounts = [:]
         delimiterNameMap.each {delimiterCounts[it.value as int] = 0}
 
-        reader.mark(readAheadLimit)
+        inputStream.mark(readAheadLimit)
 
         // Read characters in a buffer
-        char[] characterBuffer = new char[readAheadLimit - 1]
-        int charactersRead = reader.read((char[]) characterBuffer, 0, readAheadLimit - 1)
+        byte[] byteBuffer = new byte[readAheadLimit]
+        int charactersRead = inputStream.read((byte[]) byteBuffer, 0, readAheadLimit)
 
-        reader.reset()
+        inputStream.reset()
+
+        def delimiterBytes = delimiterNameMap*.value
 
         // tally occurrences of the possible delimiters
-        characterBuffer[0..charactersRead - 1].each { char c ->
-            if (c in delimiterNameMap*.value) delimiterCounts[c as int]++
+        byteBuffer[0..charactersRead - 1].each { c ->
+            if (c in delimiterBytes) delimiterCounts[c as int]++
         }
         
 		// Determine the best delimiter. It is only returned if more than value
 		// of 'threshold' of those characters have been found
-		char bestDelimiter = 0
+		byte bestDelimiter = 0
 		def bestCount = 0
 
-        delimiterNameMap*.value.each { char it ->
+        delimiterNameMap*.value.each { byte it ->
             def count = delimiterCounts[it as int]
 
             if( count > bestCount && count >= threshold) {
@@ -152,5 +158,5 @@ public class CsvParser extends MatrixParser{
 
 
 		return bestDelimiter
-	}
+    }
 }

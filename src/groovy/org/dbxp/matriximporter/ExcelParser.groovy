@@ -1,7 +1,6 @@
 package org.dbxp.matriximporter
 
 import org.apache.commons.logging.LogFactory
-import org.apache.tools.ant.util.ReaderInputStream
 import org.apache.poi.ss.usermodel.*
 
 /**
@@ -43,19 +42,17 @@ public class ExcelParser extends MatrixParser{
 	 * 					[ 1, 3, 5 ] // First line
 	 * 					[ 9, 1, 2 ] // Second line
 	 * 				]
-	 * 				The matrix must be rectangular, so all lines should contain
-	 * 				the same number of values. All values will be String objects (or null).
      *
      * 			    b. A map with parse info containing:
      * 			    - sheetIndex, the sheet which was read
      * 			    - numberOfSheets, the number of sheets contained in the excel file
 	 */
-	public ArrayList parse( Reader reader, Map hints ) {
+	public ArrayList parse( InputStream inputStream, Map hints ) {
 
 		def sheetIndex = hints.sheetIndex ?: 0
 
 		// Read the file with Apache POI 
-		def workbook = WorkbookFactory.create( new ReaderInputStream(reader) )
+		def workbook = WorkbookFactory.create( inputStream )
 		def sheet = workbook.getSheetAt(sheetIndex)
 		
 		def dataFormatter = new DataFormatter()

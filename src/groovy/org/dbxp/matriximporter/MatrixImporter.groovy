@@ -46,8 +46,8 @@ class MatrixImporter {
 	 * @param hints
 	 * @return
 	 */
-	public importFile( File file, Map hints = [:] ) {
-		importInputStream(file.newInputStream(), hints + [fileName: file.name])
+	public importFile( File file, Map hints = [:], Boolean returnInfo = false ) {
+		importInputStream(file.newInputStream(), hints + [fileName: file.name], returnInfo)
 	}
 
 	/**
@@ -56,8 +56,8 @@ class MatrixImporter {
 	 * @param hints
 	 * @return
 	 */
-	public importString( String string, Map hints  = [:] ) {
-		importInputStream( new ByteArrayInputStream(string.getBytes("UTF-8")) , hints)
+	public importString( String string, Map hints = [:], Boolean returnInfo = false ) {
+		importInputStream( new ByteArrayInputStream(string.getBytes("UTF-8")) , hints, returnInfo)
 	}
 
 	/**
@@ -66,24 +66,28 @@ class MatrixImporter {
 	 * @param hints
 	 * @return
 	 */
-	public importByteArray( byte[] bytes, Map hints  = [:] ) {
-		importInputStream(new ByteArrayInputStream(bytes), hints)
+	public importByteArray( byte[] bytes, Map hints  = [:], Boolean returnInfo = false ) {
+		importInputStream(new ByteArrayInputStream(bytes), hints, returnInfo)
 	}
 
 	/**
 	 * Imports a file using an existing MatrixParser. If no parser is found that
 	 * is able to parse the file, null is returned.
-	 * @param file	File to read
-	 * @param hints	Map with hints for the parser. The value corresponding to the key 'fileName' might be used
-	 *              by the parsers to determine whether they can parse the file.
-	 *              Might also include keys like 'startRow', 'endRow' and 'sheet'.
-	 * 				Parsers implementing this interface may or may not listen to the hints given. See the documentation
-	 * 				of different implementing classes.
-	 * @return		Two-dimensional data matrix with the contents of the file. The matrix has the structure:
-	 * 				[
-	 * 					[ 1, 3, 5 ] // First line
-	 * 					[ 9, 1, 2 ] // Second line
-	 * 				]
+	 * @param inputStream	the inputstream to read
+	 * @param hints			Map with hints for the parser. The value corresponding to the key 'fileName' might be used
+	 *              		by the parsers to determine whether they can parse the file.
+	 *              		Might also include keys like 'startRow', 'endRow' and 'sheet'.
+	 * 						Parsers implementing this interface may or may not listen to the hints given. See the documentation
+	 * 						of different implementing classes.
+	 * @param returnInfo	Used to determine return value. If 'true', the return value is a tuple containing the matrix
+	 * 						and a hashmap with information about the parsing process. This hashmap can contain keys like
+	 * 						parserClassName or delimiter so we can see the parser and parameters used in parsing the
+	 * 						input. If returnInfo is false, only the matrix will be returned.
+	 * @return				Two-dimensional data matrix with the contents of the file. The matrix has the structure:
+	 * 						[
+	 * 							[ 1, 3, 5 ] // First line
+	 * 							[ 9, 1, 2 ] // Second line
+	 * 						]
 	 */
 	public importInputStream( InputStream inputStream, Map hints = [:], Boolean returnInfo = false ) {
 
@@ -99,6 +103,13 @@ class MatrixImporter {
 					bis.reset()
 
 					(matrix, parseInfo) = parser.parse( bis, hints )
+
+					// go through each cell and try to convert string values to numbers
+					matrix = matrix.collect { row ->
+						row.collect { String cell ->
+							cell.isNumber() ? (cell.isInteger() ? cell.toInteger() : cell.toDouble()) : cell
+						}
+					}
 				} catch (e) {
 					// we take it an exception means this parser was unable to parse
 					// the input.

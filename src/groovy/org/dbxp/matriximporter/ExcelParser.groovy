@@ -61,7 +61,7 @@ public class ExcelParser extends MatrixParser{
 
         if (hints.endRow == null) hints.endRow = sheet.lastRowNum
 
-        def startRow =  forceValueInRange(hints.startRow, sheet.firstRowNum, sheet.lastRowNum)
+        def startRow =  forceValueInRange(hints.startRow ?: 0, sheet.firstRowNum, sheet.lastRowNum)
         def endRow =    forceValueInRange(hints.endRow, startRow, sheet.lastRowNum)
 
 		// Determine amount of columns: the number of columns in the first row

@@ -47,7 +47,11 @@ class MatrixImporter {
 	 * @return
 	 */
 	public importFile( File file, Map hints = [:], Boolean returnInfo = false ) {
-		importInputStream(file.newInputStream(), hints + [fileName: file.name], returnInfo)
+		// set the fileNae 'hint' if it hasn't been set by the user already
+		if (!hints.fileName) {
+			hints += [fileName: file.name]
+		}
+		importInputStream(file.newInputStream(), hints, returnInfo)
 	}
 
 	/**

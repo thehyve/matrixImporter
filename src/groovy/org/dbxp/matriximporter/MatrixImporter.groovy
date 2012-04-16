@@ -87,13 +87,14 @@ class MatrixImporter {
 	 * 						and a hashmap with information about the parsing process. This hashmap can contain keys like
 	 * 						parserClassName or delimiter so we can see the parser and parameters used in parsing the
 	 * 						input. If returnInfo is false, only the matrix will be returned.
+	 * @param parseStrings  If true, try to parse strings into numbers
 	 * @return				Two-dimensional data matrix with the contents of the file. The matrix has the structure:
 	 * 						[
 	 * 							[ 1, 3, 5 ] // First line
 	 * 							[ 9, 1, 2 ] // Second line
 	 * 						]
 	 */
-	public importInputStream( InputStream inputStream, Map hints = [:], Boolean returnInfo = false ) {
+	public importInputStream( InputStream inputStream, Map hints = [:], Boolean returnInfo = false, Boolean parseStrings = true ) {
 
 		def bis = new BufferedInputStream(inputStream)
 
@@ -108,10 +109,12 @@ class MatrixImporter {
 
 					(matrix, parseInfo) = parser.parse( bis, hints )
 
-					// go through each cell and try to convert string values to numbers
-					matrix = matrix.collect { row ->
-						row.collect { String cell ->
-							cell.isNumber() ? (cell.isInteger() ? cell.toInteger() : cell.toDouble()) : cell
+					if (parseStrings) {
+						// go through each cell and try to convert string values to numbers
+						matrix = matrix.collect { row ->
+							row.collect { String cell ->
+								cell.isNumber() ? (cell.isInteger() ? cell.toInteger() : cell.toDouble()) : cell
+							}
 						}
 					}
 				} catch (e) {

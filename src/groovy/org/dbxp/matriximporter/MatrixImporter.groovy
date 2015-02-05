@@ -60,8 +60,8 @@ class MatrixImporter {
 	 * @param hints
 	 * @return
 	 */
-	public importString( String string, Map hints = [:], Boolean returnInfo = false ) {
-		importInputStream( new ByteArrayInputStream(string.getBytes("UTF-8")) , hints, returnInfo)
+	public importString( String string, Map hints = [:], Boolean returnInfo = false, Boolean parseStrings = true ) {
+		importInputStream( new ByteArrayInputStream(string.getBytes("UTF-8")) , hints, returnInfo, parseStrings)
 	}
 
 	/**
@@ -70,8 +70,8 @@ class MatrixImporter {
 	 * @param hints
 	 * @return
 	 */
-	public importByteArray( byte[] bytes, Map hints  = [:], Boolean returnInfo = false ) {
-		importInputStream(new ByteArrayInputStream(bytes), hints, returnInfo)
+	public importByteArray( byte[] bytes, Map hints  = [:], Boolean returnInfo = false, Boolean parseStrings = true ) {
+		importInputStream(new ByteArrayInputStream(bytes), hints, returnInfo, parseStrings)
 	}
 
 	/**

@@ -13,6 +13,7 @@ grails.project.dependency.resolution = {
 	    grailsCentral()
 	    grailsHome()
 	    mavenCentral()
+	    mavenRepo "http://repo.grails.org/grails/plugins/"
     }
     dependencies {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
@@ -20,5 +21,8 @@ grails.project.dependency.resolution = {
         // runtime 'mysql:mysql-connector-java:5.1.13'
     }
 	plugins {
+	   build ':release:2.2.1', ':rest-client-builder:1.0.3', {
+	      export = false
+	   }
 	}
 }

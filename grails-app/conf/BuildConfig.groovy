@@ -11,7 +11,7 @@ grails.project.dependency.resolution = {
     log "warn" // log level of Ivy resolver, either 'error', 'warn', 'info', 'debug' or 'verbose'
     repositories {
 	    grailsCentral()
-	    grailsRepo "http://grails.org/plugins"
+	    grailsHome()
 	    mavenCentral()
     }
     dependencies {
@@ -20,18 +20,5 @@ grails.project.dependency.resolution = {
         // runtime 'mysql:mysql-connector-java:5.1.13'
     }
 	plugins {
-		// tomcat plugin should not end up in the WAR file
-		provided(
-			":tomcat:$grailsVersion",
-		)
-		
-		build( ":release:2.2.1" ) {
-			// plugin only plugin, should not be transitive to the application
-			export = false
-		}
-
-		compile(
-			":hibernate:$grailsVersion",
-		)
 	}
 }

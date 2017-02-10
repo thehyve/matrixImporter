@@ -19,6 +19,11 @@ grails.project.dependency.resolution = {
         // specify dependencies here under either 'build', 'compile', 'runtime', 'test' or 'provided' scopes eg.
 		
         // runtime 'mysql:mysql-connector-java:5.1.13'
+
+        compile 'org.apache.poi:poi:3.15'
+        compile 'org.apache.poi:poi-ooxml:3.15'
+        compile 'org.apache.poi:ooxml-schemas:1.3'
+
     }
 	plugins {
 	   build ':release:2.2.1', ':rest-client-builder:1.0.3', {

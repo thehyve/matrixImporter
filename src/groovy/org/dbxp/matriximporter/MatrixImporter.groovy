@@ -183,6 +183,7 @@ class MatrixImporter {
 	// Private constructor in order to facilitate the singleton pattern
 	private MatrixImporter() {
 		registerParser( new ExcelParser() )
+		registerParser( new ExcelXParser() )
 		registerParser( new CsvParser() )
 	}
 

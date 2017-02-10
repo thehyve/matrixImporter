@@ -23,7 +23,7 @@ public class ExcelParser extends MatrixParser{
      */
 	public boolean canParse( Map hints = [:] ) {
 		def fileName = hints.fileName
-		return fileName ? fileName.matches(/.+\.(xls|xlsx)$/) : true
+		return fileName ? fileName.matches(/.+\.xls$/) : true
 	}
 
 	/**
@@ -132,7 +132,7 @@ public class ExcelParser extends MatrixParser{
 	* @return	Human readable description
 	*/
    public String getDescription() {
-	   return "Matrix importer for reading XLS and XLSX files"
+	   return "Matrix importer for reading XLS files"
    }
 
 }
